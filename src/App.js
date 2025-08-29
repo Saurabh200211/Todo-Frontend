@@ -4,18 +4,19 @@ import "./App.css";
 function App() {
   const [tasks, setTasks] = useState([]);
   const [taskInput, setTaskInput] = useState("");
+  const API_URL = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
-    fetch("http://localhost:5000/tasks")
+    fetch(`${API_URL}/tasks`)
       .then((res) => res.json())
       .then((data) => setTasks(data))
       .catch((err) => console.error("Error fetching tasks:", err));
-  }, []);
+  }, [API_URL]);
 
   const addTask = async () => {
     if (taskInput.trim() === "") return;
     try {
-      const res = await fetch("http://localhost:5000/tasks", {
+      const res = await fetch(`${API_URL}/tasks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: taskInput }),
@@ -30,12 +31,10 @@ function App() {
 
   const toggleTaskCompletion = async (id) => {
     try {
-      const res = await fetch(`http://localhost:5000/tasks/${id}`, {
-        method: "PUT",
-      });
+      const res = await fetch(`${API_URL}/tasks/${id}`, { method: "PUT" });
       const updatedTask = await res.json();
       setTasks(
-        tasks.map((task) => (task.id === updatedTask._id ? updatedTask : task))
+        tasks.map((task) => (task._id === updatedTask._id ? updatedTask : task))
       );
     } catch (err) {
       console.error("Error toggling task:", err);
@@ -44,9 +43,7 @@ function App() {
 
   const deleteTask = async (id) => {
     try {
-      await fetch(`http://localhost:5000/tasks/${id}`, {
-        method: "DELETE",
-      });
+      await fetch(`${API_URL}/tasks/${id}`, { method: "DELETE" });
       setTasks(tasks.filter((task) => task._id !== id));
     } catch (err) {
       console.error("Error deleting task:", err);
