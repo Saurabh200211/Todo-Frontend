@@ -1,49 +1,52 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import "./App.css";
 
 function App() {
   const [tasks, setTasks] = useState([]);
   const [taskInput, setTaskInput] = useState("");
-  const API_URL = process.env.REACT_APP_API_URL;
 
+  // Base URL (local for now, later replace with your Render URL when deployed)
+  const API_BASE = "https://todo-backend-lake-rho.vercel.app/";
+
+  // Fetch all tasks
   useEffect(() => {
-    fetch(`${API_URL}/tasks`)
-      .then((res) => res.json())
-      .then((data) => setTasks(data))
+    axios
+      .get(`${API_BASE}/tasks`)
+      .then((res) => setTasks(res.data))
       .catch((err) => console.error("Error fetching tasks:", err));
-  }, [API_URL]);
+  }, []);
 
+  // Add new task
   const addTask = async () => {
     if (taskInput.trim() === "") return;
     try {
-      const res = await fetch(`${API_URL}/tasks`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: taskInput }),
+      const res = await axios.post(`${API_BASE}/tasks`, {
+        text: taskInput,
       });
-      const newTask = await res.json();
-      setTasks([...tasks, newTask]);
+      setTasks([...tasks, res.data]);
       setTaskInput("");
     } catch (err) {
       console.error("Error adding task:", err);
     }
   };
 
+  // Toggle task completion
   const toggleTaskCompletion = async (id) => {
     try {
-      const res = await fetch(`${API_URL}/tasks/${id}`, { method: "PUT" });
-      const updatedTask = await res.json();
+      const res = await axios.put(`${API_BASE}/tasks/${id}`);
       setTasks(
-        tasks.map((task) => (task._id === updatedTask._id ? updatedTask : task))
+        tasks.map((task) => (task._id === res.data._id ? res.data : task))
       );
     } catch (err) {
       console.error("Error toggling task:", err);
     }
   };
 
+  // Delete task
   const deleteTask = async (id) => {
     try {
-      await fetch(`${API_URL}/tasks/${id}`, { method: "DELETE" });
+      await axios.delete(`${API_BASE}/tasks/${id}`);
       setTasks(tasks.filter((task) => task._id !== id));
     } catch (err) {
       console.error("Error deleting task:", err);
