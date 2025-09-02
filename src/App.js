@@ -7,7 +7,7 @@ function App() {
   const [taskInput, setTaskInput] = useState("");
 
   // Base URL (local for now, later replace with your Render URL when deployed)
-  const API_BASE = "https://todo-backend-lake-rho.vercel.app/";
+  const API_BASE = "https://todo-backend-lake-rho.vercel.app";
 
   // Fetch all tasks
   useEffect(() => {
