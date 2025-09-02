@@ -21,13 +21,18 @@ function App() {
   const addTask = async () => {
     if (taskInput.trim() === "") return;
     try {
-      const res = await axios.post(`${API_BASE}/tasks`, {
+      // ✅ Match backend expected body
+      const newTask = {
         text: taskInput,
-      });
+        completed: false, // in case backend requires it
+      };
+
+      const res = await axios.post(`${API_BASE}/tasks`, newTask);
       setTasks([...tasks, res.data]);
       setTaskInput("");
     } catch (err) {
-      console.error("Error adding task:", err);
+      console.error("Error adding task:", err.response?.data || err.message);
+      alert("Failed to add task. Check backend API requirements.");
     }
   };
 
@@ -39,7 +44,7 @@ function App() {
         tasks.map((task) => (task._id === res.data._id ? res.data : task))
       );
     } catch (err) {
-      console.error("Error toggling task:", err);
+      console.error("Error toggling task:", err.response?.data || err.message);
     }
   };
 
@@ -49,7 +54,7 @@ function App() {
       await axios.delete(`${API_BASE}/tasks/${id}`);
       setTasks(tasks.filter((task) => task._id !== id));
     } catch (err) {
-      console.error("Error deleting task:", err);
+      console.error("Error deleting task:", err.response?.data || err.message);
     }
   };
 
