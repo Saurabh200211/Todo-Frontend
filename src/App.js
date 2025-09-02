@@ -6,7 +6,7 @@ function App() {
   const [tasks, setTasks] = useState([]);
   const [taskInput, setTaskInput] = useState("");
 
-  // Base URL (local for now, later replace with your Render URL when deployed)
+  // Base URL (replace with Render URL when deployed)
   const API_BASE = "https://todo-backend-lake-rho.vercel.app";
 
   // Fetch all tasks
@@ -14,7 +14,6 @@ function App() {
     axios
       .get(`${API_BASE}/tasks`)
       .then((res) => {
-        // ✅ handle if API returns {tasks: [...] } OR just [...]
         if (Array.isArray(res.data)) {
           setTasks(res.data);
         } else if (res.data.tasks) {
@@ -32,15 +31,13 @@ function App() {
   const addTask = async () => {
     if (taskInput.trim() === "") return;
     try {
-      // ✅ adjust fields according to backend
       const newTask = {
-        title: taskInput, // some backends use "title" instead of "text"
+        text: taskInput, // ✅ backend expects "text"
         completed: false,
       };
 
       const res = await axios.post(`${API_BASE}/tasks`, newTask);
 
-      // ✅ handle array vs object response
       const addedTask = res.data.task || res.data;
       setTasks([...tasks, addedTask]);
       setTaskInput("");
@@ -89,7 +86,7 @@ function App() {
         {tasks.map((task) => (
           <li key={task._id} className={task.completed ? "completed" : ""}>
             <span onClick={() => toggleTaskCompletion(task._id)}>
-              {task.title || task.text}
+              {task.text} {/* ✅ backend uses "text" */}
             </span>
             <button onClick={() => deleteTask(task._id)}>Delete</button>
           </li>
