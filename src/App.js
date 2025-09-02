@@ -13,22 +13,36 @@ function App() {
   useEffect(() => {
     axios
       .get(`${API_BASE}/tasks`)
-      .then((res) => setTasks(res.data))
-      .catch((err) => console.error("Error fetching tasks:", err));
+      .then((res) => {
+        // ✅ handle if API returns {tasks: [...] } OR just [...]
+        if (Array.isArray(res.data)) {
+          setTasks(res.data);
+        } else if (res.data.tasks) {
+          setTasks(res.data.tasks);
+        } else {
+          console.error("Unexpected API response:", res.data);
+        }
+      })
+      .catch((err) =>
+        console.error("Error fetching tasks:", err.response?.data || err.message)
+      );
   }, []);
 
   // Add new task
   const addTask = async () => {
     if (taskInput.trim() === "") return;
     try {
-      // ✅ Match backend expected body
+      // ✅ adjust fields according to backend
       const newTask = {
-        text: taskInput,
-        completed: false, // in case backend requires it
+        title: taskInput, // some backends use "title" instead of "text"
+        completed: false,
       };
 
       const res = await axios.post(`${API_BASE}/tasks`, newTask);
-      setTasks([...tasks, res.data]);
+
+      // ✅ handle array vs object response
+      const addedTask = res.data.task || res.data;
+      setTasks([...tasks, addedTask]);
       setTaskInput("");
     } catch (err) {
       console.error("Error adding task:", err.response?.data || err.message);
@@ -40,8 +54,9 @@ function App() {
   const toggleTaskCompletion = async (id) => {
     try {
       const res = await axios.put(`${API_BASE}/tasks/${id}`);
+      const updatedTask = res.data.task || res.data;
       setTasks(
-        tasks.map((task) => (task._id === res.data._id ? res.data : task))
+        tasks.map((task) => (task._id === updatedTask._id ? updatedTask : task))
       );
     } catch (err) {
       console.error("Error toggling task:", err.response?.data || err.message);
@@ -74,7 +89,7 @@ function App() {
         {tasks.map((task) => (
           <li key={task._id} className={task.completed ? "completed" : ""}>
             <span onClick={() => toggleTaskCompletion(task._id)}>
-              {task.text}
+              {task.title || task.text}
             </span>
             <button onClick={() => deleteTask(task._id)}>Delete</button>
           </li>
