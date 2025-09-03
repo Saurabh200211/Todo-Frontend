@@ -6,7 +6,7 @@ function App() {
   const [tasks, setTasks] = useState([]);
   const [taskInput, setTaskInput] = useState("");
 
-  // Base URL (replace with Render URL when deployed)
+  // Base URL (replace with your backend URL when deployed)
   const API_BASE = "https://todo-backend-lake-rho.vercel.app";
 
   // Fetch all tasks
@@ -16,8 +16,6 @@ function App() {
       .then((res) => {
         if (Array.isArray(res.data)) {
           setTasks(res.data);
-        } else if (res.data.tasks) {
-          setTasks(res.data.tasks);
         } else {
           console.error("Unexpected API response:", res.data);
         }
@@ -31,15 +29,10 @@ function App() {
   const addTask = async () => {
     if (taskInput.trim() === "") return;
     try {
-      const newTask = {
-        text: taskInput, // ✅ backend expects "text"
-        completed: false,
-      };
-
+      const newTask = { text: taskInput }; // ✅ backend expects "text"
       const res = await axios.post(`${API_BASE}/tasks`, newTask);
 
-      const addedTask = res.data.task || res.data;
-      setTasks([...tasks, addedTask]);
+      setTasks([...tasks, res.data]); // ✅ backend returns task object directly
       setTaskInput("");
     } catch (err) {
       console.error("Error adding task:", err.response?.data || err.message);
@@ -51,7 +44,7 @@ function App() {
   const toggleTaskCompletion = async (id) => {
     try {
       const res = await axios.put(`${API_BASE}/tasks/${id}`);
-      const updatedTask = res.data.task || res.data;
+      const updatedTask = res.data;
       setTasks(
         tasks.map((task) => (task._id === updatedTask._id ? updatedTask : task))
       );
@@ -86,7 +79,7 @@ function App() {
         {tasks.map((task) => (
           <li key={task._id} className={task.completed ? "completed" : ""}>
             <span onClick={() => toggleTaskCompletion(task._id)}>
-              {task.text} {/* ✅ backend uses "text" */}
+              {task.text} {/* ✅ always use "text" */}
             </span>
             <button onClick={() => deleteTask(task._id)}>Delete</button>
           </li>
