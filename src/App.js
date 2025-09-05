@@ -6,8 +6,7 @@ function App() {
   const [tasks, setTasks] = useState([]);
   const [taskInput, setTaskInput] = useState("");
 
-  // Base URL (replace with your backend URL when deployed)
-  const API_BASE = "https://todo-backend-lake-rho.vercel.app";
+  const API_BASE = "https://todo-backend-xi-eight.vercel.app";
 
   // Fetch all tasks
   useEffect(() => {
@@ -29,25 +28,38 @@ function App() {
   const addTask = async () => {
     if (taskInput.trim() === "") return;
     try {
-      const newTask = { text: taskInput }; // ✅ backend expects "text"
+      const newTask = { text: taskInput };
       const res = await axios.post(`${API_BASE}/tasks`, newTask);
 
-      setTasks([...tasks, res.data]); // ✅ backend returns task object directly
+      // ✅ ensure backend returns a valid task object
+      if (res.data && res.data._id && res.data.text) {
+        setTasks([...tasks, res.data]);
+      } else {
+        console.error("Unexpected add task response:", res.data);
+        alert("Backend did not return a valid task object.");
+      }
+
       setTaskInput("");
     } catch (err) {
       console.error("Error adding task:", err.response?.data || err.message);
-      alert("Failed to add task. Check backend API requirements.");
+      alert("Failed to add task. Check backend API.");
     }
   };
 
-  // Toggle task completion
+  // Toggle completion
   const toggleTaskCompletion = async (id) => {
     try {
-      const res = await axios.put(`${API_BASE}/tasks/${id}`);
-      const updatedTask = res.data;
-      setTasks(
-        tasks.map((task) => (task._id === updatedTask._id ? updatedTask : task))
-      );
+      const task = tasks.find((t) => t._id === id);
+      if (!task) return;
+
+      const res = await axios.put(`${API_BASE}/tasks/${id}`, {
+        completed: !task.completed,
+      });
+
+      if (res.data && res.data._id) {
+        const updatedTask = res.data;
+        setTasks(tasks.map((t) => (t._id === updatedTask._id ? updatedTask : t)));
+      }
     } catch (err) {
       console.error("Error toggling task:", err.response?.data || err.message);
     }
@@ -79,7 +91,7 @@ function App() {
         {tasks.map((task) => (
           <li key={task._id} className={task.completed ? "completed" : ""}>
             <span onClick={() => toggleTaskCompletion(task._id)}>
-              {task.text} {/* ✅ always use "text" */}
+              {task.text}
             </span>
             <button onClick={() => deleteTask(task._id)}>Delete</button>
           </li>
